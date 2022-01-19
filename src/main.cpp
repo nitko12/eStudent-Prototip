@@ -1,84 +1,62 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <tinySPI.h>
-#include <SoftwareSerial.h>
+#include <BasicSerial3.h>
 
-#define RX PB3 // *** D3, Pin 2
-#define TX PB4 // *** D4, Pin 3
+#define len(x) (uint8_t)(sizeof(x)) / (sizeof((x)[0]))
 
-SoftwareSerial Serial(RX, TX);
+uint8_t servos[] = {1, 1 << 1, 1 << 2, 1 << 7};
+uint8_t pos[] = {10, 20, 30, 40}; // [10, 40]
 
-int clockPin = PB2; // Connected to SHCP (pin 11) on the 74HC595.
-int latchPin = PB0; // Connected to STCP (pin 12) on the 74HC595.
-int dataPin = PB1;  // Connected to DS (pin 14) on the 74HC595.
+static inline void update_servo(uint8_t pin, uint8_t pos) // pin = (1 << n), pos: [0, 40]
+{
+    SPI.transfer(0);
+    _delay_us(100);
 
-int pos = 8, cnt = 0;
+    SPI.transfer(pin);
+
+    _delay_us(50);
+    for (int j = 0; j < pos; ++j)
+        _delay_us(50);
+
+    SPI.transfer(0);
+    _delay_us(18000);
+
+    SPI.transfer(0xFF);
+}
 
 int main()
 {
-    // Serial.begin(9600);
-    // Serial.listen();
+    SPI.begin();
+    SPI.transfer(0xFF);
+
+    DDRB |= (1 << PB4);
+
+    while (1)
+    {
+        uint8_t c;
+        while (c = RxByte())
+        {
+
+            pos[0] -= 10;
+
+            if (c == '0')
+                pos[0] = (pos[0] - 5 + 30) % 30;
+            if (c == '1')
+                pos[0] = (pos[0] + 5) % 30;
+
+            pos[0] += 10;
+
+            for (uint8_t i = 0; i < len(servos); ++i)
+                update_servo(servos[i], pos[i]);
+        }
+    }
 
     // while (1)
     // {
-    //     while (Serial.available())
-    //         Serial.write(Serial.read());
+    //     for (uint8_t i = 0; i < len(servos); ++i)
+    //         update_servo(servos[i], pos[i]);
     // }
-
-    SPI.begin();
-
-    SPI.transfer(0);
-
-    int cnt = 0;
-    while (1)
-    {
-        SPI.transfer((char)0);
-        _delay_us(2000);
-
-        SPI.transfer(1 << 7);
-        if (cnt & (1 << 2))
-            _delay_us(2000);
-        else
-            _delay_us(1000);
-
-        SPI.transfer((char)0);
-        _delay_us(18000);
-
-        SPI.transfer(1 << 2);
-        if (cnt & (1 << 3))
-            _delay_us(1000);
-        else
-            _delay_us(2000);
-
-        SPI.transfer((char)0);
-        _delay_us(18000);
-
-        SPI.transfer(1);
-        if (cnt & (1 << 4))
-            _delay_us(1000);
-        else
-            _delay_us(2000);
-
-        SPI.transfer((char)0);
-        _delay_us(18000);
-
-        SPI.transfer((char)0xFF);
-
-        SPI.transfer(1 << 1);
-        if (cnt & (1 << 5))
-            _delay_us(1000);
-        else
-            _delay_us(2000);
-
-        SPI.transfer((char)0);
-        _delay_us(18000);
-
-        SPI.transfer((char)0xFF);
-
-        _delay_us(18000);
-
-        ++cnt;
-    }
 
     return 0;
 }
