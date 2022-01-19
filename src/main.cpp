@@ -3,8 +3,8 @@
 #include <tinySPI.h>
 #include <SoftwareSerial.h>
 
-#define RX 3 // *** D3, Pin 2
-#define TX 4 // *** D4, Pin 3
+#define RX PB3 // *** D3, Pin 2
+#define TX PB4 // *** D4, Pin 3
 
 SoftwareSerial Serial(RX, TX);
 
@@ -16,40 +16,68 @@ int pos = 8, cnt = 0;
 
 int main()
 {
-    // Serial.begin(115200);
+    // Serial.begin(9600);
+    // Serial.listen();
 
     // while (1)
     // {
-    //     Serial.print("abcdefghi");
-
-    //     _delay_ms(1000);
+    //     while (Serial.available())
+    //         Serial.write(Serial.read());
     // }
 
     SPI.begin();
 
-    DDRB |= (1 << latchPin);
-    PORTB |= (1 << latchPin);
+    SPI.transfer(0);
 
-    PORTB &= ~(1 << latchPin);
-    SPI.transfer(0xff);
-    PORTB |= (1 << latchPin);
-
+    int cnt = 0;
     while (1)
     {
-        for (char i = 0; i < 16; ++i)
-        {
-            PORTB &= ~(1 << latchPin);
+        SPI.transfer((char)0);
+        _delay_us(2000);
 
-            SPI.transfer(i > cnt / 100 ? 0xff : ~(1 << 4));
-            PORTB |= (1 << latchPin);
+        SPI.transfer(1 << 7);
+        if (cnt & (1 << 2))
+            _delay_us(2000);
+        else
+            _delay_us(1000);
 
-            _delay_us(400);
-        }
+        SPI.transfer((char)0);
+        _delay_us(18000);
+
+        SPI.transfer(1 << 2);
+        if (cnt & (1 << 3))
+            _delay_us(1000);
+        else
+            _delay_us(2000);
+
+        SPI.transfer((char)0);
+        _delay_us(18000);
+
+        SPI.transfer(1);
+        if (cnt & (1 << 4))
+            _delay_us(1000);
+        else
+            _delay_us(2000);
+
+        SPI.transfer((char)0);
+        _delay_us(18000);
+
+        SPI.transfer((char)0xFF);
+
+        SPI.transfer(1 << 1);
+        if (cnt & (1 << 5))
+            _delay_us(1000);
+        else
+            _delay_us(2000);
+
+        SPI.transfer((char)0);
+        _delay_us(18000);
+
+        SPI.transfer((char)0xFF);
+
+        _delay_us(18000);
 
         ++cnt;
-
-        if (cnt > 1000)
-            cnt = 0;
     }
 
     return 0;
