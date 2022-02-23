@@ -5,11 +5,12 @@
 
 #define len(x) (uint8_t)(sizeof(x)) / (sizeof((x)[0]))
 
-uint8_t servos[] = {1, 1 << 1, 1 << 2, 1 << 7};
-uint8_t pos[] = {20, 20, 20, 17}; // [10, 40]
+uint8_t servos[] = {1, 1 << 1, 1 << 2, 1 << 3, 1 << 4, 1 << 5, 1 << 6, 1 << 7};
+uint8_t pos[] = {15, 20, 20, 20, 20, 20, 20, 20}; // [10, 40]
 
 static inline void update_servo(uint8_t pin, uint8_t pos) // pin = (1 << n), pos: [0, 40]
 {
+
     SPI.transfer(~pin);
     _delay_us(100);
 
@@ -20,8 +21,8 @@ static inline void update_servo(uint8_t pin, uint8_t pos) // pin = (1 << n), pos
         _delay_us(50);
 
     SPI.transfer(~pin);
-    _delay_us(1000);
 
+    _delay_us(100);
     SPI.transfer(0xFF);
 }
 
@@ -44,8 +45,7 @@ ISR(TIMER1_COMPA_vect)
     else
         i++;
 
-    // if (i == 0)
-    //     pos[i] = (pos[i] - 10 + 10) % 30 + 10;
+    // pos[i] = (pos[i] - 10 + 15) % 30 + 10;
     update_servo(servos[i], pos[i]);
 }
 
@@ -57,45 +57,41 @@ int main()
     initTimer1();
     sei();
 
-    uint8_t t, cnt1 = 3, cnt2 = 0;
+    int t, cnt = 0, cnt2 = 0;
     while (1)
     {
         if (t = RxByte())
         {
             block = 1;
+
             if (t == '0')
             {
+                int a[] = {13, 25};
+                pos[0] = a[cnt++];
+                if (cnt == 2)
+                    cnt = 0;
 
-                pos[0] = (pos[0] - 10 + 15) % 30 + 10;
                 update_servo(servos[0], pos[0]);
             }
+
             if (t == '1')
             {
-
-                // pos[1] = (pos[1] - 10 + 15) % 30 + 10;
-                uint8_t arr[] = {20, 10, 30, 10};
-                cnt1 = (cnt1 + 1) % 4;
-
-                pos[1] = arr[cnt1];
-                update_servo(servos[1], pos[1]);
-            }
-            if (t == '2')
-            {
-
+                pos[2] = 20;
                 update_servo(servos[2], pos[2]);
             }
+
             if (t == '3')
             {
-                uint8_t arr[] = {17, 23};
-                cnt2 = (cnt2 + 1) % 2;
-
-                pos[3] = arr[cnt2];
-                // pos[3] = (pos[2] - 10 + 15) % 30 + 10;
-
-                // pos[3] = (pos[3] - 10 + 15) % 30 + 10;
-
-                update_servo(servos[3], pos[3]);
+                pos[2] = 11;
+                update_servo(servos[2], pos[2]);
             }
+
+            if (t == '2')
+            {
+                pos[2] = 29;
+                update_servo(servos[2], pos[2]);
+            }
+
             block = 0;
         }
     }

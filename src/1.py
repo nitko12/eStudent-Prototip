@@ -1,28 +1,46 @@
 import serial
 import time
 
-ser = serial.Serial("/dev/cu.usbserial-1440", 57600)
+ser = serial.Serial("/dev/cu.usbserial-1430", 57600)
 
-l1 = [1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0]  # odsviraj
-l3 = [0.5, 0.75, 0.25, 0.25, 1, 0.25, 0.25,
-      0.25, 0.25, 0.25, 0.5, 0.5]  # čekaj
+if __name__ == "__main__":
+    ser.write(b"1")
+    time.sleep(0.07)
 
-while True:
-    for x, t in zip(l1, l3):
-        if x:
-            ser.write(b"1")
-        time.sleep(0.07)
+    ser.write(b"0")
+    time.sleep(0.4)
+    ser.write(b"0")
+    time.sleep(0.6)
 
-        ser.write(b"3")
-        time.sleep(0.05)
+    ser.write(b"0")
+    time.sleep(0.2)
+    ser.write(b"2")
+    time.sleep(0.07)
+    ser.write(b"0")
+    time.sleep(0.2)
+    ser.write(b"3")
+    time.sleep(0.07)
+    ser.write(b"0")
+    time.sleep(0.8)
 
-        time.sleep(t*.5)
+    ser.write(b"0")
+    time.sleep(0.2)
+    ser.write(b"0")
+    time.sleep(0.2)
+
+    ser.write(b"2")
+    time.sleep(0.07)
+    ser.write(b"0")
+    time.sleep(0.2)
+    ser.write(b"0")
+    time.sleep(0.2)
 
     ser.write(b"1")
-    time.sleep(0.05)
-    ser.write(b"1")
-    time.sleep(0.05)
-    ser.write(b"1")
-    time.sleep(0.05)
+    time.sleep(0.07)
+    ser.write(b"0")
+    time.sleep(0.3)
 
-    time.sleep(0.5)
+    ser.write(b"0")
+    time.sleep(0.4)
+    ser.write(b"0")
+    time.sleep(0.4)
