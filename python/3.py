@@ -152,6 +152,19 @@ if __name__ == "__main__":
         # theDevice.write(notes["A0"][0][0])
         # time.sleep(WAIT_BETWEEN_WRITE)
 
+        # theDevice.write(60)
+        # time.sleep(0.1)
+        # theDevice.write(28)
+        # time.sleep(0.1)
+
+        for x in range(32, 32+10):
+            theDevice.write(x)
+            time.sleep(0.01)
+
+        time.sleep(1)
+
+        continue
+
         time.sleep(WAIT_TILL_PLAY)
 
         for x in range(0, 4):

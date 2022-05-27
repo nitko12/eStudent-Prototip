@@ -1,17 +1,12 @@
-
-# for msg in MidiFile('song.mid'):
-#     time.sleep(msg.time)
-#     if not msg.is_meta:
-#         port.send(msg)
-
-
+import mido
 from mido import MidiFile
 import pysine
 import time
 from Usb_interface import ArduinoUsbDevice
 
+outport = mido.open_output()
 
-WAIT_TILL_PLAY = 0.05
+WAIT_TILL_PLAY = 0.01
 WAIT_BETWEEN_WRITE = 0.01
 
 pick = [(60, 28), (29, 61), (62, 30), (31, 63)]
@@ -47,8 +42,17 @@ def noteToFreq(note):
     return (a / 32) * (2 ** ((note - 9) / 12))
 
 
-mid = MidiFile('satifsaction.midi')
+# -60 za sweet
+# -43 za sugar
 
+pjesma = 'Mata.mid'
+
+port = mido.open_output(mido.get_output_names()[-1])
+mid = MidiFile(pjesma)
+
+
+pressed = [-1, -1, -1, -1]
+holding = [-1, -1, -1, -1]
 
 if __name__ == "__main__":
 
@@ -81,31 +85,42 @@ if __name__ == "__main__":
 
     for msg in mid.play():
 
-        if time.time() - last_time < 0.1:
+        if (msg.type == "note_on" or msg.type == "note_off") and 0 <= int(msg.note) - 60 <= 127:
+            port.send(mido.Message(msg.type, note=(int(msg.note) - 60)))
+        else:
+            port.send(msg)
+
+        if time.time() - last_time < 0.01:
             continue
+
         if msg.type == "note_on":
-            print(msg.note)
+            # print(msg.note)
             # if msg.channel != 1:
             #     continue
 
             # print("tu")
 
-            nota = (int(msg.note) - 43)
+            nota = (int(msg.note) - 60)
 
             if(not (0 <= nota < 21)):
                 continue
 
             print(nota)
 
-            if last_note != -1:
-                theDevice.write(last_note)
-                time.sleep(WAIT_BETWEEN_WRITE)
-
             mappings = notes[nota]
 
             mapping = mappings[0]
             if mapping[0] is None:
                 continue
+
+            print(mapping, pressed)
+
+            if pressed[mapping[2]] != -1:
+                theDevice.write(pressed[mapping[2]])
+                time.sleep(WAIT_BETWEEN_WRITE)
+
+            pressed[mapping[2]] = mapping[1]
+            holding[mapping[2]] = mapping[0]
 
             theDevice.write(mapping[0])
             time.sleep(WAIT_BETWEEN_WRITE)
@@ -117,6 +132,10 @@ if __name__ == "__main__":
 
             last_note = mapping[1]
             last_time = time.time()
+
+            for x in range(0, 4):
+                theDevice.write(holding[x])
+                time.sleep(WAIT_BETWEEN_WRITE)
 
             # pysine.sine(frequency=noteToFreq(msg.bytes()[1]), duration=msg.time)
             # print(msg)
