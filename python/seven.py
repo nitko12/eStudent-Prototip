@@ -45,11 +45,15 @@ def noteToFreq(note):
 # -60 za sweet
 # -43 za sugar
 
-pjesma = 'Mata.mid'
+pjesma = 'midi/SevenNationArmy.mid'
 
 port = mido.open_output(mido.get_output_names()[-1])
 mid = MidiFile(pjesma)
 
+# c je 60
+
+offset2 = -24-4
+offset1 = 0-4
 
 pressed = [-1, -1, -1, -1]
 holding = [-1, -1, -1, -1]
@@ -83,24 +87,31 @@ if __name__ == "__main__":
 
     mid.ticks_per_beat *= 1
 
+    # print(nota)
+
     for msg in mid.play():
 
-        if (msg.type == "note_on" or msg.type == "note_off") and 0 <= int(msg.note) - 60 <= 127:
-            port.send(mido.Message(msg.type, note=(int(msg.note) - 60)))
+        if (msg.type == "note_on" or msg.type == "note_off") and 0 <= int(msg.note) - offset1 <= 127:
+            print(int(msg.note) - offset1)
+            port.send(mido.Message(msg.type, note=(int(msg.note) - offset1)))
         else:
             port.send(msg)
 
         if time.time() - last_time < 0.01:
             continue
 
-        if msg.type == "note_on":
+        # print("nice", str(msg))
+
+        if msg.type == "note_on" and str(msg).find("channel=4") != -1:
+
             # print(msg.note)
             # if msg.channel != 1:
             #     continue
 
             # print("tu")
 
-            nota = (int(msg.note) - 60)
+            nota = (int(msg.note) + offset2)
+            print(int(msg.note))
 
             if(not (0 <= nota < 21)):
                 continue
@@ -113,7 +124,7 @@ if __name__ == "__main__":
             if mapping[0] is None:
                 continue
 
-            print(mapping, pressed)
+            # print(mapping, pressed)
 
             if pressed[mapping[2]] != -1:
                 theDevice.write(pressed[mapping[2]])
